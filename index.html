@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trigonometry Master</title>
+    
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #c71585; 
+            --primary-light: #fce4ec;
+            --text: #333;
+            --bg: #f9f9f9;
+            --success: #28a745;
+            --error: #dc3545;
+            --warning: #ffc107;
+            --border: #ddd;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
+        header { background-color: var(--primary); color: white; padding: 1rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        nav { display: flex; justify-content: center; background: white; border-bottom: 1px solid var(--border); }
+        nav button { background: none; border: none; padding: 15px 20px; cursor: pointer; font-size: 1rem; font-weight: bold; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s; }
+        nav button.active { color: var(--primary); border-bottom-color: var(--primary); }
+        main { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+
+        .mode-container { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .mode-container.active { display: block; }
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; justify-content: space-between; background: var(--primary-light); padding: 15px; border-radius: 6px; }
+        
+        select, input[type="text"], input[type="number"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        button.action-btn { background-color: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+        button.action-btn:hover { background-color: #a0126b; }
+        button.action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .problem-area { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        @media (max-width: 768px) { .problem-area { grid-template-columns: 1fr; } }
+
+        .svg-container { text-align: center; min-height: 350px; display: flex; align-items: center; justify-content: center; background: #fff; border: 1px dashed #eee; }
+        svg { max-width: 100%; height: auto; overflow: visible; }
+        
+        .triangle-path { fill: none; stroke: var(--primary); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+        .right-angle { fill: none; stroke: var(--primary); stroke-width: 2; }
+        .svg-text { font-family: 'Times New Roman', serif; font-size: 20px; fill: #333; font-weight: bold; text-shadow: 2px 2px 0px white, -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white; }
+
+        .inputs-container { display: flex; flex-direction: column; gap: 15px; }
+        .input-group { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .input-group label { min-width: 80px; font-weight: bold; }
+        .input-group input { width: 100px; }
+        
+        .feedback-msg { font-weight: bold; margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .feedback-correct { background: #d4edda; color: #155724; }
+        .feedback-error { background: #f8d7da; color: #721c24; }
+        .feedback-warn { background: #fff3cd; color: #856404; }
+        
+        .solution-box { margin-top: 20px; padding: 15px; background: #f0f0f0; border-left: 4px solid var(--primary); display: none; font-size: 0.95rem; }
+        
+        input.correct { border-color: var(--success); background-color: #e8f5e9; }
+        input.incorrect { border-color: var(--error); background-color: #fbe9eb; }
+        
+        .obj1-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .quiz-status { position: sticky; top: 0; background: white; padding: 10px; border-bottom: 1px solid var(--border); z-index: 100; display: flex; justify-content: space-between; font-weight: bold; }
+        
+        /* Certificate Styles */
+        .certificate { 
+            border: 10px solid var(--primary); 
+            padding: 40px; 
+            text-align: center; 
+            background: #fff; 
+            background-image: radial-gradient(#eeb7d8 1px, transparent 1px); 
+            background-size: 20px 20px; 
+            display: none; 
+            margin-top: 20px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .cert-score { font-size: 2.5rem; font-weight: bold; color: #333; display: block; margin: 10px 0; }
+        .cert-time { font-size: 0.9rem; color: #555; margin-top: 5px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Right-Angled Trigonometry</h1>
+</header>
+
+<nav>
+    <button id="btn-practice" class="active" onclick="switchMode('practice')">Practice Mode</button>
+    <button id="btn-quiz" onclick="switchMode('quiz')">Quiz Mode</button>
+</nav>
+
+<main>
+    <!-- PRACTICE MODE -->
+    <div id="practice-mode" class="mode-container active">
+        <div class="controls">
+            <div>
+                <label for="obj-select">Objective: </label>
+                <select id="obj-select">
+                    <option value="random">Random</option>
+                    <option value="1">1. Finding Ratios (sin, cos, tan)</option>
+                    <option value="2">2. Finding Missing Side</option>
+                    <option value="3">3. Finding Missing Angle</option>
+                </select>
+            </div>
+            <button class="action-btn" onclick="generatePracticeProblem()">New Question</button>
+        </div>
+
+        <div id="practice-content" style="display:none;">
+            <div class="problem-area">
+                <div class="svg-container" id="practice-svg"></div>
+                <div class="inputs-container">
+                    <p id="practice-instruction" style="font-weight:bold; margin-top:0;"></p>
+                    <div id="practice-inputs"></div>
+                    <button id="practice-submit" class="action-btn" onclick="checkPractice()">Submit</button>
+                    <div id="practice-feedback" class="feedback-msg" style="display:none;"></div>
+                    <div id="practice-solution" class="solution-box"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="practice-start-msg" style="text-align:center; padding:40px; color:#666;">
+            Select an objective and click "New Question" to begin.
+        </div>
+    </div>
+
+    <!-- QUIZ MODE -->
+    <div id="quiz-mode" class="mode-container">
+        <div id="quiz-setup" style="text-align: center; padding: 40px;">
+            <h2>Trigonometry Quiz</h2>
+            <p>10 Points Total | 3 Attempts Max</p>
+            <input type="text" id="student-name" placeholder="Enter your name" style="padding: 10px; width: 250px; text-align:center; margin: 15px 0;">
+            <br>
+            <button class="action-btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quiz-active" style="display:none;">
+            <div class="quiz-status">
+                <span id="student-display">Player</span>
+                <span>Attempt: <span id="attempt-count">1</span>/3</span>
+            </div>
+            <div id="quiz-questions-container"></div>
+            <div style="text-align: center; padding: 20px;">
+                <button class="action-btn" onclick="submitQuiz()" style="font-size: 1.2rem; padding: 15px 40px;">Submit Quiz</button>
+            </div>
+        </div>
+
+        <div id="quiz-results" style="display:none;">
+            <!-- Certificate Container -->
+            <div class="certificate" id="certificate">
+                <div style="font-size: 2.5rem; color: var(--primary); margin-bottom: 10px; font-family: serif;">Certificate of Achievement</div>
+                <div style="font-size: 1.2rem; margin: 20px 0;">
+                    This is to certify that<br>
+                    <strong id="cert-name" style="font-size:2rem; color: #444;">Student</strong><br>
+                    has completed the Trigonometry Quiz.
+                </div>
+                <div style="font-size: 1.2rem; margin: 20px 0;">
+                    Your Score:
+                    <span id="cert-score" class="cert-score">0 / 10</span>
+                </div>
+                <div style="font-size: 1rem; color: #666; margin-bottom: 20px;">
+                    Attempts used: <span id="cert-attempts">1</span>
+                </div>
+                <!-- Time Stamps -->
+                <div class="cert-time">Started: <span id="cert-start-time"></span></div>
+                <div class="cert-time">Ended: <span id="cert-end-time"></span></div>
+            </div>
+            
+            <div style="text-align:center; margin-top:30px;">
+                <h3>Review Solutions</h3>
+                <div id="quiz-solutions-container"></div>
+                <button class="action-btn" onclick="location.reload()" style="margin-top:20px;">Restart App</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+/* --- UTILITIES --- */
+const Utils = {
+    radToDeg: (rad) => rad * (180 / Math.PI),
+    degToRad: (deg) => deg * (Math.PI / 180),
+    randomInt: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
+    round: (num, decimals) => Number(Math.round(num + 'e' + decimals) + 'e-' + decimals),
+    generateTriangle: () => {
+        let a = Utils.randomInt(5, 20);
+        let b = Utils.randomInt(5, 20);
+        while (Math.max(a,b) > 2 * Math.min(a,b)) { b = Utils.randomInt(5, 20); }
+        const c = Math.sqrt(a*a + b*b);
+        const A = Utils.radToDeg(Math.atan(a/b)); 
+        const B = 90 - A; 
+        return { a, b, c, A, B }; 
+    },
+    // Philippine Time Formatter
+    formatPHTime: (date) => {
+        return date.toLocaleString('en-PH', {
+            timeZone: 'Asia/Manila',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true
+        });
+    }
+};
+
+/* --- SVG GENERATOR (Strict Mapping) --- */
+const SVGGen = {
+    createSVG: (id, data, labels, rotation = null) => {
+        const container = document.getElementById(id);
+        container.innerHTML = '';
+        const scale = 12; 
+        const padding = 50;
+
+        // C(0,0)=Right Angle. A(0,b)=Top(Angle A). B(a,0)=Right(Angle B).
+        const C = { x: 0, y: 0 };
+        const B = { x: data.a * scale, y: 0 }; 
+        const A = { x: 0, y: data.b * scale };
+
+        const rotDeg = rotation !== null ? rotation : Utils.randomInt(0, 359);
+        const rad = Utils.degToRad(rotDeg);
+        const rotate = (p) => ({
+            x: p.x * Math.cos(rad) - p.y * Math.sin(rad),
+            y: p.x * Math.sin(rad) + p.y * Math.cos(rad)
+        });
+
+        const rA = rotate(A);
+        const rB = rotate(B);
+        const rC = rotate(C);
+
+        const xs = [rA.x, rB.x, rC.x], ys = [rA.y, rB.y, rC.y];
+        const minX = Math.min(...xs)-padding, maxX = Math.max(...xs)+padding;
+        const minY = Math.min(...ys)-padding, maxY = Math.max(...ys)+padding;
+        const w = maxX - minX, h = maxY - minY;
+
+        let svg = `<svg viewBox="${minX} ${minY} ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
+        svg += `<path d="M${rC.x},${rC.y} L${rB.x},${rB.y} L${rA.x},${rA.y} Z" class="triangle-path" />`;
+
+        // Right Angle
+        const size = 15;
+        const vCA = { x: rA.x - rC.x, y: rA.y - rC.y };
+        const lenCA = Math.sqrt(vCA.x**2 + vCA.y**2);
+        const uCA = { x: vCA.x/lenCA, y: vCA.y/lenCA };
+        const vCB = { x: rB.x - rC.x, y: rB.y - rC.y };
+        const lenCB = Math.sqrt(vCB.x**2 + vCB.y**2);
+        const uCB = { x: vCB.x/lenCB, y: vCB.y/lenCB };
+        const ra1 = { x: rC.x + uCA.x * size, y: rC.y + uCA.y * size };
+        const ra2 = { x: rC.x + uCB.x * size, y: rC.y + uCB.y * size };
+        const ra3 = { x: ra1.x + uCB.x * size, y: ra1.y + uCB.y * size };
+        svg += `<polyline points="${ra1.x},${ra1.y} ${ra3.x},${ra3.y} ${ra2.x},${ra2.y}" class="right-angle" />`;
+
+        const drawText = (p1, p2, text, isSide) => {
+            if(!text) return '';
+            const mid = { x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2 };
+            const dx = p2.x - p1.x, dy = p2.y - p1.y;
+            let nx = -dy, ny = dx;
+            const len = Math.sqrt(nx*nx + ny*ny);
+            nx /= len; ny /= len;
+            const cent = { x: (rA.x+rB.x+rC.x)/3, y: (rA.y+rB.y+rC.y)/3 };
+            const vC = { x: mid.x - cent.x, y: mid.y - cent.y };
+            if (nx*vC.x + ny*vC.y < 0) { nx = -nx; ny = -ny; }
+            const dist = isSide ? 25 : 35;
+            return `<text x="${mid.x + nx*dist}" y="${mid.y + ny*dist}" class="svg-text" text-anchor="middle" dominant-baseline="middle">${text}</text>`;
+        };
+
+        svg += drawText(rC, rB, labels.a, true); // Segment CB (Opp A) -> a
+        svg += drawText(rC, rA, labels.b, true); // Segment CA (Opp B) -> b
+        svg += drawText(rA, rB, labels.c, true); // Segment AB -> c
+
+        const drawAngleLabel = (v, p1, p2, label) => {
+             if(!label) return '';
+             const dx1 = p1.x - v.x, dy1 = p1.y - v.y;
+             const dx2 = p2.x - v.x, dy2 = p2.y - v.y;
+             const l1 = Math.sqrt(dx1**2+dy1**2), l2 = Math.sqrt(dx2**2+dy2**2);
+             const bx = (dx1/l1 + dx2/l2), by = (dy1/l1 + dy2/l2);
+             const blen = Math.sqrt(bx**2 + by**2);
+             const offset = 35;
+             return `<text x="${v.x + (bx/blen)*offset}" y="${v.y + (by/blen)*offset}" class="svg-text" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
+        }
+
+        svg += drawAngleLabel(rA, rC, rB, labels.alpha || labels.A);
+        svg += drawAngleLabel(rB, rC, rA, labels.beta || labels.B);
+
+        svg += '</svg>';
+        container.innerHTML = svg;
+    }
+};
+
+/* --- PROBLEM DATA GENERATION --- */
+const App = {
+    mode: 'practice',
+    currentProblem: null,
+    practiceAttempts: 0,
+    quiz: { questions: [], userAttempts: 0, startTime: null, endTime: null }
+};
+
+function switchMode(mode) {
+    App.mode = mode;
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.mode-container').forEach(c => c.classList.remove('active'));
+    document.getElementById(`btn-${mode}`).classList.add('active');
+    document.getElementById(`${mode}-mode`).classList.add('active');
+    if(mode === 'practice') {
+        document.getElementById('practice-start-msg').style.display = 'block';
+        document.getElementById('practice-content').style.display = 'none';
+    }
+}
+
+function generateProblemData(type) {
+    const tri = Utils.generateTriangle();
+    let problem = { type: type, tri: tri, svgLabels: {}, inputs: [], solutionTex: "" };
+    
+    // OBJ 1: Ratios
+    if (type === 1) {
+        problem.svgLabels = { a: tri.a, b: tri.b, c: Utils.round(tri.c, 2), alpha: "α", beta: "β" };
+        problem.inputs = [
+            { id: "sinA", label: "\\(\\sin \\alpha\\)", ans: tri.a/tri.c },
+            { id: "cosA", label: "\\(\\cos \\alpha\\)", ans: tri.b/tri.c },
+            { id: "tanA", label: "\\(\\tan \\alpha\\)", ans: tri.a/tri.b },
+            { id: "sinB", label: "\\(\\sin \\beta\\)", ans: tri.b/tri.c },
+            { id: "cosB", label: "\\(\\cos \\beta\\)", ans: tri.a/tri.c },
+            { id: "tanB", label: "\\(\\tan \\beta\\)", ans: tri.b/tri.a }
+        ];
+        
+        const cRound = Utils.round(tri.c, 2);
+        problem.solutionTex = `
+            $$ \\textbf{Angle } \\alpha: $$
+            $$ \\sin \\alpha = \\frac{\\text{Opp}}{\\text{Hyp}} = \\frac{${tri.a}}{${cRound}} \\approx ${(tri.a/tri.c).toFixed(4)} \\quad
+               \\cos \\alpha = \\frac{\\text{Adj}}{\\text{Hyp}} = \\frac{${tri.b}}{${cRound}} \\approx ${(tri.b/tri.c).toFixed(4)} $$
+            $$ \\tan \\alpha = \\frac{\\text{Opp}}{\\text{Adj}} = \\frac{${tri.a}}{${tri.b}} \\approx ${(tri.a/tri.b).toFixed(4)} $$
+            <hr style="border:0; border-top:1px solid #ccc; margin:10px 0;">
+            $$ \\textbf{Angle } \\beta: $$
+            $$ \\sin \\beta = \\frac{\\text{Opp}}{\\text{Hyp}} = \\frac{${tri.b}}{${cRound}} \\approx ${(tri.b/tri.c).toFixed(4)} \\quad
+               \\cos \\beta = \\frac{\\text{Adj}}{\\text{Hyp}} = \\frac{${tri.a}}{${cRound}} \\approx ${(tri.a/tri.c).toFixed(4)} $$
+            $$ \\tan \\beta = \\frac{\\text{Opp}}{\\text{Adj}} = \\frac{${tri.b}}{${tri.a}} \\approx ${(tri.b/tri.a).toFixed(4)} $$
+        `;
+    } 
+    // OBJ 2: Missing Side (Cross Multiplication)
+    else if (type === 2) {
+        const useAngleA = Math.random() > 0.5;
+        const angleVal = useAngleA ? tri.A : tri.B;
+        const angleDisp = Math.round(angleVal);
+        const rad = Utils.degToRad(angleDisp);
+        
+        // 0:Sin, 1:Cos, 2:Tan
+        const trigType = Utils.randomInt(0, 2); 
+        const varPos = (problem.subData && problem.subData.varPos) ? problem.subData.varPos : (Math.random() > 0.5 ? 'num' : 'den');
+        
+        let knownVal = Utils.randomInt(10, 30);
+        let ans, func, num, den, ratioName;
+        
+        if (useAngleA) problem.svgLabels.alpha = angleDisp + "°";
+        else problem.svgLabels.beta = angleDisp + "°";
+        
+        const oppKey = useAngleA ? 'a' : 'b';
+        const adjKey = useAngleA ? 'b' : 'a';
+
+        if (trigType === 0) { // SIN
+            func = "\\sin"; ratioName = "\\frac{\\text{Opp}}{\\text{Hyp}}";
+            if(varPos === 'num') {
+                problem.svgLabels[oppKey] = "x"; problem.svgLabels.c = knownVal;
+                num = "x"; den = knownVal; ans = knownVal * Math.sin(rad);
+            } else {
+                problem.svgLabels[oppKey] = knownVal; problem.svgLabels.c = "x";
+                num = knownVal; den = "x"; ans = knownVal / Math.sin(rad);
+            }
+        } else if (trigType === 1) { // COS
+            func = "\\cos"; ratioName = "\\frac{\\text{Adj}}{\\text{Hyp}}";
+            if(varPos === 'num') {
+                problem.svgLabels[adjKey] = "x"; problem.svgLabels.c = knownVal;
+                num = "x"; den = knownVal; ans = knownVal * Math.cos(rad);
+            } else {
+                problem.svgLabels[adjKey] = knownVal; problem.svgLabels.c = "x";
+                num = knownVal; den = "x"; ans = knownVal / Math.cos(rad);
+            }
+        } else { // TAN
+            func = "\\tan"; ratioName = "\\frac{\\text{Opp}}{\\text{Adj}}";
+            if(varPos === 'num') {
+                problem.svgLabels[oppKey] = "x"; problem.svgLabels[adjKey] = knownVal;
+                num = "x"; den = knownVal; ans = knownVal * Math.tan(rad);
+            } else {
+                problem.svgLabels[oppKey] = knownVal; problem.svgLabels[adjKey] = "x";
+                num = knownVal; den = "x"; ans = knownVal / Math.tan(rad);
+            }
+        }
+        
+        let step1 = `${func}(${angleDisp}^\\circ) = ${ratioName}`;
+        let step2 = `${func}(${angleDisp}^\\circ) = \\frac{${num}}{${den}}`;
+        let step3 = `\\frac{${func}(${angleDisp}^\\circ)}{1} = \\frac{${num}}{${den}}`;
+        let step4 = "", step5 = "", step6 = "";
+
+        if (varPos === 'num') {
+            step4 = `x \\cdot 1 = ${den} \\cdot ${func}(${angleDisp}^\\circ)`;
+            step5 = `x = ${den} \\cdot ${(Math[func.substring(1)](rad)).toFixed(4)}`;
+        } else {
+            step4 = `x \\cdot ${func}(${angleDisp}^\\circ) = ${num} \\cdot 1`;
+            step5 = `x = \\frac{${num}}{${(Math[func.substring(1)](rad)).toFixed(4)}}`;
+        }
+        step6 = `x = ${(ans).toFixed(2)}`;
+
+        problem.solutionTex = `
+            $$ ${step1} $$
+            $$ ${step2} $$
+            $$ \\textbf{Cross Multiply:} $$
+            $$ ${step3} $$
+            $$ ${step4} $$
+            $$ ${step5} $$
+            $$ ${step6} $$
+        `;
+        problem.inputs = [{ id: "x", label: "x", ans: ans }];
+    }
+    // OBJ 3: Missing Angle
+    else if (type === 3) {
+        const useAngleA = Math.random() > 0.5;
+        const ans = useAngleA ? tri.A : tri.B;
+        problem.svgLabels = { alpha: useAngleA ? "θ" : "", beta: !useAngleA ? "θ" : "" };
+        
+        const hide = Utils.randomInt(0, 2); 
+        if(hide !== 0) problem.svgLabels.a = tri.a;
+        if(hide !== 1) problem.svgLabels.b = tri.b;
+        if(hide !== 2) problem.svgLabels.c = Utils.round(tri.c, 2);
+        
+        problem.inputs = [{ id: "theta", label: "\\(\\theta\\)", ans: ans }];
+        
+        let func = "", ratioStr = "", calcStr = "";
+        let opp = useAngleA ? tri.a : tri.b;
+        let adj = useAngleA ? tri.b : tri.a;
+        let hyp = Utils.round(tri.c, 2);
+        let ratioVal = 0;
+
+        if (hide === 2) { 
+            func = "\\tan"; ratioStr = `\\frac{${opp}}{${adj}}`; ratioVal = opp/adj; calcStr = `\\frac{\\text{Opp}}{\\text{Adj}}`;
+        } else if (hide === 1) { 
+            if(useAngleA) { func="\\sin"; ratioStr=`\\frac{${opp}}{${hyp}}`; ratioVal=opp/hyp; calcStr=`\\frac{\\text{Opp}}{\\text{Hyp}}`; }
+            else { func="\\cos"; ratioStr=`\\frac{${adj}}{${hyp}}`; ratioVal=adj/hyp; calcStr=`\\frac{\\text{Adj}}{\\text{Hyp}}`; }
+        } else { 
+            if(useAngleA) { func="\\cos"; ratioStr=`\\frac{${adj}}{${hyp}}`; ratioVal=adj/hyp; calcStr=`\\frac{\\text{Adj}}{\\text{Hyp}}`; }
+            else { func="\\sin"; ratioStr=`\\frac{${opp}}{${hyp}}`; ratioVal=opp/hyp; calcStr=`\\frac{\\text{Opp}}{\\text{Hyp}}`; }
+        }
+
+        problem.solutionTex = `
+            $$ ${func}(\\theta) = ${calcStr} $$
+            $$ ${func}(\\theta) = ${ratioStr} $$
+            $$ ${func}(\\theta) = ${ratioVal.toFixed(4)} $$
+            $$ \\theta = ${func}^{-1}(${ratioVal.toFixed(4)}) $$
+            $$ \\theta = ${ans.toFixed(2)}^\\circ $$
+        `;
+    }
+    
+    return problem;
+}
+
+/* --- PRACTICE --- */
+function generatePracticeProblem() {
+    document.getElementById('practice-start-msg').style.display = 'none';
+    document.getElementById('practice-content').style.display = 'block';
+    document.getElementById('practice-solution').style.display = 'none';
+    document.getElementById('practice-feedback').style.display = 'none';
+    document.getElementById('practice-submit').disabled = false;
+    App.practiceAttempts = 0;
+
+    let type = document.getElementById('obj-select').value;
+    if (type === 'random') type = Utils.randomInt(1, 3);
+    else type = parseInt(type);
+
+    App.currentProblem = generateProblemData(type);
+    SVGGen.createSVG('practice-svg', App.currentProblem.tri, App.currentProblem.svgLabels);
+
+    const inputsDiv = document.getElementById('practice-inputs');
+    inputsDiv.innerHTML = '';
+    const isGrid = App.currentProblem.type === 1;
+    let html = isGrid ? `<div class="obj1-grid">` : `<div>`;
+    
+    App.currentProblem.inputs.forEach(inp => {
+        html += `
+            <div class="input-group">
+                <label>${inp.label} = </label>
+                <input type="number" step="any" id="inp-${inp.id}" autocomplete="off">
+            </div>
+        `;
+    });
+    html += `</div>`;
+    inputsDiv.innerHTML = html;
+    
+    let instr = "";
+    if(type===1) instr = "Find the trigonometric ratios (4 d.p.).";
+    else if(type===2) instr = "Find the missing side x (2 d.p.).";
+    else instr = "Find the angle θ (2 d.p.).";
+    document.getElementById('practice-instruction').innerText = instr;
+        
+    MathJax.typesetPromise();
+}
+
+function checkPractice() {
+    const prob = App.currentProblem;
+    const feedback = document.getElementById('practice-feedback');
+    let allCorrect = true;
+    let roundError = false;
+
+    prob.inputs.forEach(item => {
+        const el = document.getElementById(`inp-${item.id}`);
+        const val = parseFloat(el.value);
+        if (isNaN(val)) {
+            el.classList.add('incorrect');
+            allCorrect = false;
+            return;
+        }
+        
+        const tol = prob.type === 1 ? 0.0005 : 0.02;
+        if (Math.abs(val - item.ans) < tol) {
+            el.classList.add('correct');
+            el.classList.remove('incorrect');
+            el.disabled = true;
+        } else {
+            if (Math.abs(val - item.ans) < 0.1) roundError = true;
+            el.classList.add('incorrect');
+            allCorrect = false;
+        }
+    });
+
+    feedback.style.display = 'block';
+    if(allCorrect) {
+        feedback.className = 'feedback-msg feedback-correct';
+        feedback.innerText = "Correct!";
+        document.getElementById('practice-submit').disabled = true;
+    } else {
+        App.practiceAttempts++;
+        feedback.className = `feedback-msg ${roundError ? 'feedback-warn' : 'feedback-error'}`;
+        feedback.innerText = roundError ? "Check rounding." : "Incorrect. Try again.";
+        
+        if(App.practiceAttempts >= 2) {
+            document.getElementById('practice-solution').style.display = 'block';
+            document.getElementById('practice-solution').innerHTML = `<strong>Solution:</strong> ${prob.solutionTex}`;
+            MathJax.typesetPromise();
+            document.getElementById('practice-submit').disabled = true;
+            prob.inputs.forEach(i => document.getElementById(`inp-${i.id}`).disabled = true);
+        }
+    }
+}
+
+/* --- QUIZ --- */
+function startQuiz() {
+    const name = document.getElementById('student-name').value;
+    if(!name) return alert("Enter name");
+    document.getElementById('student-display').innerText = name;
+    document.getElementById('quiz-setup').style.display = 'none';
+    document.getElementById('quiz-active').style.display = 'block';
+    App.quiz.userAttempts = 0;
+    
+    // CAPTURE START TIME
+    App.quiz.startTime = new Date();
+
+    const qs = [];
+    qs.push(generateProblemData(1));
+    
+    let obj2Num, obj2Den;
+    while(!obj2Num || obj2Num.solutionTex.indexOf('\\cdot 1') === -1) { 
+        let temp = generateProblemData(2); 
+        if(temp.solutionTex.includes('x \\cdot 1')) obj2Num = temp;
+    }
+    while(!obj2Den || obj2Den.solutionTex.indexOf('x \\cdot \\') === -1) {
+        let temp = generateProblemData(2); 
+        if(temp.solutionTex.includes('x \\cdot \\')) obj2Den = temp;
+    }
+    
+    qs.push(obj2Num);
+    qs.push(obj2Den);
+    qs.push(generateProblemData(3));
+    qs.push(generateProblemData(3));
+    
+    App.quiz.questions = qs;
+    
+    const container = document.getElementById('quiz-questions-container');
+    container.innerHTML = '';
+    
+    qs.forEach((q, idx) => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <div style="border-bottom:1px solid #eee; padding:20px 0;">
+                <h3>Question ${idx+1}</h3>
+                <div class="problem-area">
+                    <div class="svg-container" id="q-svg-${idx}"></div>
+                    <div class="inputs-container" id="q-inputs-${idx}"></div>
+                </div>
+            </div>`;
+        container.appendChild(div);
+        
+        setTimeout(() => {
+            SVGGen.createSVG(`q-svg-${idx}`, q.tri, q.svgLabels);
+            const inpDiv = document.getElementById(`q-inputs-${idx}`);
+            const isGrid = q.type === 1;
+            let h = isGrid ? `<div class="obj1-grid">` : `<div>`;
+            q.inputs.forEach(inp => {
+                h += `<div class="input-group"><label>${inp.label}=</label><input type="number" id="q-in-${idx}-${inp.id}"></div>`;
+            });
+            h += `</div>`;
+            inpDiv.innerHTML = h;
+        }, 0);
+    });
+    
+    setTimeout(() => MathJax.typesetPromise(), 500);
+}
+
+function submitQuiz() {
+    let allDisabled = true;
+    App.quiz.questions.forEach((q, idx) => {
+        q.inputs.forEach(inp => {
+            const el = document.getElementById(`q-in-${idx}-${inp.id}`);
+            if(!el.disabled) {
+                const val = parseFloat(el.value);
+                const tol = q.type===1?0.0005:0.02;
+                if(!isNaN(val) && Math.abs(val-inp.ans)<tol) {
+                    el.classList.add('correct'); el.classList.remove('incorrect');
+                    el.disabled = true;
+                } else {
+                    el.classList.add('incorrect');
+                    allDisabled = false;
+                }
+            }
+        });
+    });
+    
+    App.quiz.userAttempts++;
+    document.getElementById('attempt-count').innerText = Math.min(App.quiz.userAttempts+1, 3);
+    
+    if(allDisabled || App.quiz.userAttempts >= 3) {
+        endQuiz();
+    } else {
+        alert("Incorrect answers marked red. Try again.");
+    }
+}
+
+function endQuiz() {
+    document.getElementById('quiz-active').style.display = 'none';
+    document.getElementById('quiz-results').style.display = 'block';
+    
+    // CAPTURE END TIME
+    App.quiz.endTime = new Date();
+
+    let score = 0;
+    App.quiz.questions.forEach((q, idx) => {
+        let qPoints = 0;
+        q.inputs.forEach(inp => {
+            if(document.getElementById(`q-in-${idx}-${inp.id}`).classList.contains('correct')) qPoints++;
+        });
+        score += qPoints;
+    });
+    
+    document.getElementById('cert-name').innerText = document.getElementById('student-name').value;
+    document.getElementById('cert-score').innerText = score + " / 10";
+    document.getElementById('cert-attempts').innerText = App.quiz.userAttempts;
+    
+    // SET TIME DISPLAYS
+    document.getElementById('cert-start-time').innerText = Utils.formatPHTime(App.quiz.startTime);
+    document.getElementById('cert-end-time').innerText = Utils.formatPHTime(App.quiz.endTime);
+
+    // Explicitly toggle display to block
+    document.getElementById('certificate').style.display = 'block';
+    
+    const resDiv = document.getElementById('quiz-solutions-container');
+    resDiv.innerHTML = '';
+    App.quiz.questions.forEach((q, idx) => {
+        const sol = document.createElement('div');
+        sol.className = 'solution-box';
+        sol.style.display = 'block';
+        sol.innerHTML = `<strong>Q${idx+1} Solution:</strong> ${q.solutionTex}`;
+        resDiv.appendChild(sol);
+    });
+    MathJax.typesetPromise();
+}
+</script>
+</body>
+</html>
